@@ -1,9 +1,9 @@
 const axios = require('axios');
 const { Configuration, OpenAIApi } = require("openai");
 const fs = require('fs');
-// const dotenv = require("dotenv");
+const dotenv = require("dotenv");
 
-// dotenv.config();
+dotenv.config();
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -65,11 +65,12 @@ if (!fs.existsSync('./embeddings')) {
   const imageCount = fs.readdirSync('./images').length;
   console.log(`Total number of images: ${imageCount}`);
 
-  fs.writeFileSync('./embeddingMap.json', JSON.stringify(embeddingMap));
+  fs.writeFileSync('./embeddings/embeddings.json', JSON.stringify(embeddings));
+  fs.writeFileSync('./embeddings/embeddingMap.json', JSON.stringify(embeddingMap));
 
-  for (let i = 0; i < embeddings.length; i++) {
-    fs.writeFileSync(`./embeddings/${embeddings[i].id}.json`, JSON.stringify(embeddings[i]));
-  }
+  // for (let i = 0; i < embeddings.length; i++) {
+  //   fs.writeFileSync(`./embeddings/${embeddings[i].id}.json`, JSON.stringify(embeddings[i]));
+  // }
   console.log('Finished');
 }
 main();
