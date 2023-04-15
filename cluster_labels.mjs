@@ -25,16 +25,33 @@ const clusterTitles = csvParse(clusterTitleCsv).map((row) => row.titles);
 // we will use the following function to make the request to the openai api
 async function getLabelFromTitles(titleString) {
   const completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    // model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: [
       {
         role: "user",
-        content: `Please respond with a single word or phrase that best captures the theme of all of the titles in the following list:
+        content: `Please respond with a cluster name that best captures the theme of all of the titles in the following list:
         ${titleString}
 
-        Remember, please respond with only one word or phrase.
+        Make sure your response is only a word or phrase.
         `
       },
+      // {
+      //   role: "user",
+      //   content: `Please respond with an emoji that best captures the theme of all of the titles in the following list:
+      //   ${titleString}
+
+      //   If an Emoji alone is not enough to summarize all of the titles, you may use up to 3 additional words to describe the theme of the cluster. If you use more than 3 words, your response will be rejected and you will be severely penalized.
+      //   `
+      // },
+      // {
+      //   role: "user",
+      //   content: `The following is a list of Reddit post titles:
+      //   ${titleString}
+
+      //   Please write a short summary of the topic of this cluster, and why these posts are grouped together. Use your expert understanding of Reddit to summarizy why these posts did well on Reddit, and why they are grouped together in this cluster. Please keep your answer to a paragraph or so. Use a smart, authoritative, journalistic tone.
+      //   `
+      // },
     ]
   });
   const aiResponse = completion.data.choices[0].message.content;
