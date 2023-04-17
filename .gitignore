@@ -4,4 +4,5 @@ yarn.lock
 node_modules
 images
 posts
+data
 embeddings

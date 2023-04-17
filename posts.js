@@ -2,11 +2,11 @@
 /*
 Run this script with a number to fetch posts from reddit
 node posts.js fetch 1000
-This will create a posts/rawPosts.json file with the raw posts from reddit
+This will create a data/${subreddit}-rawPosts.json file with the raw posts from reddit
 
 Run this script as:
 node posts.js process
-to process the rawPosts into posts/posts.json
+to process the rawPosts into data/${subreddit}-posts.json
 */
 
 const axios = require('axios');
@@ -14,10 +14,9 @@ const fs = require('fs');
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const fetchTopPosts = async (after) => {
+const fetchTopPosts = async (sub, after) => {
   console.log(`Fetching posts after ${after}`);
-  const fetchUrl = `https://www.reddit.com/r/dataisbeautiful/top.json?t=all&limit=100&after=${after}`
-  // const fetchUrl = `https://www.reddit.com/r/dataisbeautiful/top.json?t=all&limit=100&count=${after}`
+  const fetchUrl = `https://www.reddit.com/r/${sub}/top.json?t=all&limit=100&after=${after}`
   console.log('🔗 Fetching URL:', fetchUrl);
   const response = await axios.get(fetchUrl);
   return response.data.data.children;
@@ -104,13 +103,13 @@ const processPost = async (post, i) => {
 };
 
 
-async function getPosts(maxPosts) {
+async function getPosts(sub, maxPosts) {
   let allPosts = [];
   let after = null;
 
   // check if we have posts already and start from there
-  if (fs.existsSync('./posts/rawPosts.json')) {
-    const postsData = JSON.parse(fs.readFileSync('./posts/rawPosts.json', 'utf-8'))
+  if (fs.existsSync(`./data/${sub}-rawPosts.json`)) {
+    const postsData = JSON.parse(fs.readFileSync(`./data/${sub}-rawPosts.json`, 'utf-8'))
     console.log("raw posts loaded", postsData.length)
     if(postsData.length) {
       allPosts = postsData
@@ -119,13 +118,12 @@ async function getPosts(maxPosts) {
   }
 
   while (allPosts.length < maxPosts) {
-    const posts = await fetchTopPosts(after);
-    // const posts = await fetchTopPosts(allPosts.length);
+    const posts = await fetchTopPosts(sub, after);
     if (!posts.length) break;
     allPosts = allPosts.concat(posts);
     after = "t3_" + posts[posts.length - 1].data.id;
     console.log("all posts", allPosts.length)
-    fs.writeFileSync('./posts/rawPosts.json', JSON.stringify(allPosts));
+    fs.writeFileSync(`./data/${sub}-rawPosts.json`, JSON.stringify(allPosts));
     await delay(3000); // Wait 3 seconds between Reddit API requests
   }
 
@@ -133,16 +131,16 @@ async function getPosts(maxPosts) {
   return allPosts;
 }
 
-async function processPosts() {
+async function processPosts(sub) {
 
-  const postsData = JSON.parse(fs.readFileSync('./posts/rawPosts.json', 'utf-8'))
+  const postsData = JSON.parse(fs.readFileSync(`./data/${sub}-rawPosts.json`, 'utf-8'))
     console.log("raw posts loaded", postsData.length)
     if(postsData.length) {
       allPosts = postsData
 
     console.log("processing posts", allPosts.length)
     const processedPosts = await Promise.all(allPosts.map(processPost));
-    fs.writeFileSync('./posts/posts.json', JSON.stringify(processedPosts));
+    fs.writeFileSync(`./data/${sub}-posts.json`, JSON.stringify(processedPosts));
 
     console.log("done processing posts", processedPosts.length)
   }
@@ -150,20 +148,23 @@ async function processPosts() {
 
 async function main() {
   // if posts directory doesn't exist create it
-  if (!fs.existsSync('./posts')) {
-    fs.mkdirSync('./posts');
+  if (!fs.existsSync('./data')) {
+    fs.mkdirSync('./data');
   }
   if (!fs.existsSync('./images')) {
     fs.mkdirSync('./images');
   }
 
   // if the script is run with an argument, fetch that many posts
-  if (process.argv[2] == "fetch") {
+  if (process.argv[3] == "fetch") {
     console.log("fetching posts")
-    getPosts(process.argv[3] || 1000);
-  } else {
+    getPosts(process.argv[2], process.argv[4] || 1000);
+    processPosts(process.argv[2]);
+  } else if(process.argv[3] == "process") {
     console.log("processing posts")
-    processPosts();
+    processPosts(process.argv[2]);
+  } else {
+    console.log("usage: node posts.js <subreddit> <fetch|process> <number of posts>")
   }
 }
 main();
