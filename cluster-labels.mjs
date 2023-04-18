@@ -1,15 +1,11 @@
-// const fs = require("fs");
-// import fs instead
 import fs from "fs";
-// const { Configuration, OpenAIApi } = require("openai");
 import { Configuration, OpenAIApi } from "openai";
 import { encode } from "gpt-3-encoder"
-// const dotenv = require("dotenv");
-import dotenv from "dotenv";
-// add d3-dsv
-// const d3 = require("d3-dsv");
 import { csvParse, csvFormat } from "d3-dsv";
+
+import dotenv from "dotenv";
 dotenv.config();
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
