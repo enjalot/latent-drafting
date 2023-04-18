@@ -3,11 +3,17 @@
 This repository attempts to simplify a workflow for exploring latent spaces. We draft maps of embeddings via a combination of node scripts, python notebooks and Observable notebooks.
 
 
+## Embed any csv
+
+If you have a csv file where you'd like to embed the text in a given column, you can do so with this command:
+~~~bash
+node embed-csv.mjs <filename> <text column> <id column>
+~~~
+If there is no id column it will use the row # in the input csv as the id. It expects the csv file to be in the data/ directory.
 
 ## Reddit embeddings
 
-Download post data from reddit and embed it with OpenAI
-
+You can download up to 1000 top posts for any subreddit via the reddit API. We then embed the title and selftext for all the posts.
 
 ~~~bash
 # download the top 1000 posts for DataIsBeautiful
