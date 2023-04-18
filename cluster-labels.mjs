@@ -45,16 +45,23 @@ const clusterLabels = clusterExtracts.map(async (cluster) => {
   console.log('📚', cluster.cluster, cluster.extract.length);
   let extract = cluster.extract;
   let label = ''
-  let tokens = encode(cluster.extract)
+  let tokens = encode(extract)
   console.log('🔢', tokens.length);
-  if(tokens.length > 4000) extract = cluster.extract.slice(0, 15000)
+  if(tokens.length > 4000) extract = extract.slice(0, 15000)
+  tokens = encode(extract)
+  if(tokens.length > 4000) extract = extract.slice(0, 10000)
+  tokens = encode(extract)
+  if(tokens.length > 4000) extract = extract.slice(0, 5000)
   try {
     label = await getLabelFromExtract(extract)
     console.log('🏷️', label);
   } catch (error) {
-    console.log(error.data);
+    console.log(error?.response?.data?.error?.message);
   }  
-  return {cluster: cluster.cluster, label: label.replace(/\"/g, '')}
+  // clean up the label with a regex that removes non word characters
+  label = label.replace(/[^a-zA-Z0-9 ]/g, '')
+  // .replace(/\"/g, '')
+  return {cluster: cluster.cluster, label: label}
 })
 
 // wait for all the requests to finish
