@@ -1,3 +1,7 @@
+/*
+Usage: node embed-csv.mjs <filename> <column> <id>
+*/
+
 import { getEmbeddings, saveEmbeddings } from "./embeddings.mjs";
 import * as fs  from "fs";
 import { csvParse } from "d3"
@@ -21,7 +25,9 @@ async function main() {
   const embeddings = await getEmbeddings(
     extracts,
     (d,i) => id ? d[id] : i,
-    (d) => d[column]
+    (d) => d[column],
+    10,
+    200
   );
 
   saveEmbeddings(embeddings, filename.replace('.csv', ''));

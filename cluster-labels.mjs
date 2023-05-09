@@ -19,7 +19,7 @@ async function getLabelFromExtract(extract) {
     messages: [
       {
         role: "user",
-        content: `Please respond with a single word or phrase that best captures the theme of all of the titles in the following list:
+        content: `Please respond with a single word or phrase that best captures the theme of the items in the following list:
         ${extract}
 
         Remember, please respond with only one word or phrase.
