@@ -68,9 +68,10 @@ export async function getEmbeddings(
 
   async function getEmbeddingBatch(items, i) {
     let prompts = items.map((d, j) => prepPrompt(text(d), i + j))
+    // let prompts = items.map((d, j) => ({str: text(d), row_index: i + j})) // if we trust the nput
     let results = []
 
-    console.log("Getting embeddings for batch", prompts[0], "to",prompts[prompts.length-1])//prompts.map(d => d.row_index))
+    console.log("Getting embeddings for batch", prompts[0].row_index, "to",prompts[prompts.length-1].row_index)//prompts.map(d => d.row_index))
     try {
       const openAIResponse = await openai.createEmbedding({
         model: "text-embedding-ada-002",
@@ -80,6 +81,7 @@ export async function getEmbeddings(
       // console.log("API RESPONSE DATA", data)
       
       data.data.forEach(d => {
+        if(!d.embedding || !d.embedding.length) console.error("ERROR: no embedding", d)
         results[d.index] = {
           metadata: {
             row_index: prompts[d.index].row_index,
@@ -97,7 +99,6 @@ export async function getEmbeddings(
       console.log("ERROR", error?.response?.data?.error?.message);
       throw new Error(error?.response?.data?.error?.message)
     }
-    console.log("Got embeddings for batch")
     return results;
   }
   
@@ -165,9 +166,41 @@ export function saveEmbeddings(embeddings, name) {
   );
 
   console.log("writing", `./data/${name}-embeddings.bin`)
-  const flat = embeddings.flatMap((d) => d.embedding);
-  const combinedArray = Float64Array.from(flat);
-  const combinedBuffer = Buffer.from(combinedArray.buffer);
-  fs.writeFileSync(`./data/${name}-embeddings.bin`, combinedBuffer);
+  let len = embeddings.length
+  let dim = embeddings[0].embedding.length;
+  let size = len * dim
+  console.log("creating float array of size", size)
+  const floatArray = new Float64Array(size);
+  for(let i = 0; i < len; i++) {
+    for(let j = 0; j < dim; j++) {
+      floatArray[i * dim + j] = embeddings[i].embedding[j];
+    }
+  }
+
+  // write the float array in chunks to avoid memory issues
+  const writeStream = fs.createWriteStream(`./data/${name}-embeddings.bin`);
+  const chunkSize = 1000; // Adjust this value based on your requirements and available memory.
+  writeChunks(writeStream, floatArray, size, chunkSize);
+
+  // const buffer = Buffer.from(floatArray.buffer);
+  // fs.writeFileSync(`./data/${name}-embeddings.bin`, buffer);
 }
 
+function writeChunks(stream, array, length, chunkSize, startIndex = 0) {
+  if (startIndex >= length) {
+    stream.end();
+    return;
+  }
+
+  const endIndex = Math.min(startIndex + chunkSize, length);
+  const buffer = Buffer.from(array.buffer, startIndex * 8, (endIndex - startIndex) * 8);
+
+  stream.write(buffer, (error) => {
+    if (error) {
+      console.error('Error writing chunk:', error);
+      stream.end();
+    } else {
+      writeChunks(stream, array, length, chunkSize, endIndex);
+    }
+  });
+}
