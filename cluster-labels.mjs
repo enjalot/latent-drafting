@@ -11,18 +11,25 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+
+const preamble = `Please respond with a single word or phrase that best captures the theme of the items in the following list:`
+// const preamble = `Given these descriptions of Gene Ontology gene sets, please come up with a single short phrase to summarize them as a group:`
+const reminder = `Remember, please respond with only one word or phrase.`
+// const reminder = `Remember, please respond with only a few words.`
+
 // we will use the following function to make the request to the openai api
 async function getLabelFromExtract(extract) {
   const completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    // model: "gpt-3.5-turbo",
     // model: "gpt-4",
+    model: "gpt-4-1106-preview",
     messages: [
       {
         role: "user",
-        content: `Please respond with a single word or phrase that best captures the theme of the items in the following list:
+        content: `${preamble}
         ${extract}
 
-        Remember, please respond with only one word or phrase.
+        ${reminder}
         `
       },
     ]
